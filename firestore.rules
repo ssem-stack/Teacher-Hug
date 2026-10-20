@@ -1,0 +1,140 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened global helpers
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // 1. Counseling Sessions
+    match /counseling_sessions/{sessionId} {
+      function isValidSession(data) {
+        return data.teacherUid is string && data.teacherUid.size() <= 128 &&
+               data.personaId in ['mentor', 'therapist', 'mediator', 'peer'] &&
+               data.title is string && data.title.size() <= 200 &&
+               data.createdAt is timestamp &&
+               data.updatedAt is timestamp;
+      }
+
+      allow get: if isSignedIn() && isValidId(sessionId) && isOwner(existing().teacherUid);
+      allow list: if isSignedIn() && resource.data.teacherUid == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(sessionId) &&
+                    isOwner(incoming().teacherUid) &&
+                    isValidSession(incoming()) &&
+                    incoming().createdAt == request.time &&
+                    incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && isValidId(sessionId) &&
+                    isOwner(existing().teacherUid) &&
+                    incoming().teacherUid == existing().teacherUid &&
+                    isValidSession(incoming()) &&
+                    incoming().createdAt == existing().createdAt &&
+                    incoming().updatedAt == request.time;
+      allow delete: if isSignedIn() && isValidId(sessionId) && isOwner(existing().teacherUid);
+
+      // Subcollection: Messages
+      match /messages/{messageId} {
+        function isValidMessage(data) {
+          return data.sessionId is string && data.sessionId == sessionId &&
+                 data.teacherUid is string &&
+                 data.role in ['user', 'assistant'] &&
+                 data.content is string && data.content.size() <= 4000 &&
+                 data.createdAt is timestamp;
+        }
+
+        allow get: if isSignedIn() && isValidId(sessionId) && isValidId(messageId) && isOwner(existing().teacherUid);
+        allow list: if isSignedIn() && isValidId(sessionId) && resource.data.teacherUid == request.auth.uid;
+        allow create: if isSignedIn() && isValidId(sessionId) && isValidId(messageId) &&
+                      isOwner(incoming().teacherUid) &&
+                      isValidMessage(incoming()) &&
+                      incoming().createdAt == request.time;
+        allow delete: if isSignedIn() && isValidId(sessionId) && isValidId(messageId) && isOwner(existing().teacherUid);
+      }
+    }
+
+    // 2. Prescriptions
+    match /prescriptions/{prescriptionId} {
+      function isValidPrescription(data) {
+        return data.teacherUid is string && data.teacherUid.size() <= 128 &&
+               data.quote is string && data.quote.size() <= 500 &&
+               data.analysis is string && data.analysis.size() <= 1000 &&
+               data.leaveBehind is string && data.leaveBehind.size() <= 500 &&
+               data.giftForToday is string && data.giftForToday.size() <= 500 &&
+               data.teaOrRitual is string && data.teaOrRitual.size() <= 500 &&
+               data.affirmation is string && data.affirmation.size() <= 300 &&
+               data.createdAt is timestamp;
+      }
+
+      allow get: if isSignedIn() && isValidId(prescriptionId) && isOwner(existing().teacherUid);
+      allow list: if isSignedIn() && resource.data.teacherUid == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(prescriptionId) &&
+                    isOwner(incoming().teacherUid) &&
+                    isValidPrescription(incoming()) &&
+                    incoming().createdAt == request.time;
+      allow delete: if isSignedIn() && isValidId(prescriptionId) && isOwner(existing().teacherUid);
+    }
+
+    // 3. Parent Cases
+    match /parent_cases/{caseId} {
+      function isValidParentCase(data) {
+        return data.teacherUid is string && data.teacherUid.size() <= 128 &&
+               data.category is string && data.category.size() <= 100 &&
+               data.createdAt is timestamp;
+      }
+
+      allow get: if isSignedIn() && isValidId(caseId) && isOwner(existing().teacherUid);
+      allow list: if isSignedIn() && resource.data.teacherUid == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(caseId) &&
+                    isOwner(incoming().teacherUid) &&
+                    isValidParentCase(incoming()) &&
+                    incoming().createdAt == request.time;
+      allow delete: if isSignedIn() && isValidId(caseId) && isOwner(existing().teacherUid);
+    }
+
+    // 4. Community Notes
+    match /community_notes/{noteId} {
+      function isValidNote(data) {
+        return data.authorId is string && data.authorId.size() <= 128 &&
+               data.authorName is string && data.authorName.size() <= 60 &&
+               data.gradeLevel is string && data.gradeLevel.size() <= 60 &&
+               data.content is string && data.content.size() <= 1000 &&
+               data.likes is number && data.likes >= 0 &&
+               data.tags is list && data.tags.size() <= 10 &&
+               data.createdAt is timestamp;
+      }
+
+      allow get: if isSignedIn() && isValidId(noteId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(noteId) &&
+                    isOwner(incoming().authorId) &&
+                    isValidNote(incoming()) &&
+                    incoming().likes == 1 &&
+                    incoming().createdAt == request.time;
+      allow update: if isSignedIn() && isValidId(noteId) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['likes']) &&
+                    incoming().likes == existing().likes + 1;
+      allow delete: if isSignedIn() && isValidId(noteId) && isOwner(existing().authorId);
+    }
+  }
+}

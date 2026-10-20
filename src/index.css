@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    background-color: #faf8f5;
+    color: #2d3748;
+    overflow-x: hidden;
+  }
+}
+
+.font-serif-kr {
+  font-family: 'Nanum Myeongjo', serif;
+}
+
+/* Custom scrollbar for serene feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Breathing animation for mindfulness */
+@keyframes breath-expand {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+}
+
+.animate-breathe {
+  animation: breath-expand 8s ease-in-out infinite;
+}
+
+/* Paper burn / disappear animation */
+@keyframes dissolve-away {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translateY(-20px) scale(0.95);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.85);
+    filter: blur(8px);
+  }
+}
+
+.animate-dissolve {
+  animation: dissolve-away 1.5s forwards ease-in-out;
+}

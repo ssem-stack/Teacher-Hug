@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "counselingSession": {
+      "title": "CounselingSession",
+      "description": "A counseling session between a teacher and an AI mentor",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "teacherUid": { "type": "string", "maxLength": 128 },
+        "teacherEmail": { "type": "string", "maxLength": 256 },
+        "personaId": { "type": "string", "enum": ["mentor", "therapist", "mediator", "peer"] },
+        "title": { "type": "string", "maxLength": 200 },
+        "lastMessage": { "type": "string", "maxLength": 500 },
+        "messageCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["teacherUid", "personaId", "title", "createdAt", "updatedAt"]
+    },
+    "sessionMessage": {
+      "title": "SessionMessage",
+      "description": "An individual chat message in a counseling session",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "sessionId": { "type": "string", "maxLength": 128 },
+        "teacherUid": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "enum": ["user", "assistant"] },
+        "content": { "type": "string", "maxLength": 4000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sessionId", "teacherUid", "role", "content", "createdAt"]
+    },
+    "comfortPrescription": {
+      "title": "ComfortPrescription",
+      "description": "A personalized mind care prescription card",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "teacherUid": { "type": "string", "maxLength": 128 },
+        "quote": { "type": "string", "maxLength": 500 },
+        "analysis": { "type": "string", "maxLength": 1000 },
+        "leaveBehind": { "type": "string", "maxLength": 500 },
+        "giftForToday": { "type": "string", "maxLength": 500 },
+        "teaOrRitual": { "type": "string", "maxLength": 500 },
+        "affirmation": { "type": "string", "maxLength": 300 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["teacherUid", "quote", "analysis", "leaveBehind", "giftForToday", "teaOrRitual", "affirmation", "createdAt"]
+    },
+    "parentCase": {
+      "title": "ParentCase",
+      "description": "A saved parent communication case and draft response",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "teacherUid": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "maxLength": 100 },
+        "parentMessage": { "type": "string", "maxLength": 2000 },
+        "situationContext": { "type": "string", "maxLength": 2000 },
+        "summary": { "type": "string", "maxLength": 1000 },
+        "selectedResponse": { "type": "string", "maxLength": 4000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["teacherUid", "category", "createdAt"]
+    },
+    "communityNote": {
+      "title": "CommunityNote",
+      "description": "An anonymous supportive note shared by a teacher to colleagues",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 60 },
+        "gradeLevel": { "type": "string", "maxLength": 60 },
+        "content": { "type": "string", "maxLength": 1000 },
+        "likes": { "type": "number" },
+        "tags": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["authorId", "authorName", "gradeLevel", "content", "likes", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/counseling_sessions/{sessionId}": {
+      "schema": "counselingSession",
+      "description": "Teacher counseling sessions"
+    },
+    "/counseling_sessions/{sessionId}/messages/{messageId}": {
+      "schema": "sessionMessage",
+      "description": "Messages within a counseling session"
+    },
+    "/prescriptions/{prescriptionId}": {
+      "schema": "comfortPrescription",
+      "description": "Saved mind prescriptions for teachers"
+    },
+    "/parent_cases/{caseId}": {
+      "schema": "parentCase",
+      "description": "Saved parent communication cases and drafts"
+    },
+    "/community_notes/{noteId}": {
+      "schema": "communityNote",
+      "description": "Shared community encouragement notes"
+    }
+  }
+}
